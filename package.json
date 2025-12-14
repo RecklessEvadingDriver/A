@@ -1,0 +1,19 @@
+{
+  "name": "moviesmod-api",
+  "version": "1.0.0",
+  "description": "MoviesMod Scraper API for Cloudflare Pages",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler pages dev ./public --binding",
+    "deploy": "wrangler pages deploy ./public"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

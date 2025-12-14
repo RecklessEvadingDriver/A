@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoviesMod API</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #e0e0e0;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle {
+      color: #888;
+      margin-bottom: 40px;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    h2 {
+      color: #00d4ff;
+      margin-bottom: 16px;
+      font-size: 1.3em;
+    }
+    h3 {
+      color: #9b59b6;
+      margin: 16px 0 8px 0;
+      font-size: 1.1em;
+    }
+    code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'Fira Code', 'Consolas', monospace;
+      color: #00d4ff;
+    }
+    pre {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: #e0e0e0;
+    }
+    .param {
+      display: flex;
+      margin: 8px 0;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .param-name {
+      color: #00d4ff;
+      font-weight: bold;
+      width: 100px;
+      flex-shrink: 0;
+    }
+    .param-required {
+      color: #ff6b6b;
+      font-size: 0.8em;
+      margin-left: 8px;
+    }
+    .param-optional {
+      color: #4ecdc4;
+      font-size: 0.8em;
+      margin-left: 8px;
+    }
+    .param-desc {
+      color: #ccc;
+    }
+    a {
+      color: #00d4ff;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .example-link {
+      display: block;
+      padding: 10px;
+      background: rgba(0, 212, 255, 0.1);
+      border-radius: 6px;
+      margin: 8px 0;
+      word-break: break-all;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎬 MoviesMod API</h1>
+    <p class="subtitle">A serverless API for searching and streaming movies & TV shows</p>
+
+    <div class="card">
+      <h2>📡 API Endpoint</h2>
+      <pre><code>GET /api/moviesmod</code></pre>
+    </div>
+
+    <div class="card">
+      <h2>📋 Parameters</h2>
+      
+      <div class="param">
+        <span class="param-name">title</span>
+        <span class="param-required">required</span>
+        <span class="param-desc">Movie or TV show title to search for</span>
+      </div>
+      
+      <div class="param">
+        <span class="param-name">type</span>
+        <span class="param-optional">optional</span>
+        <span class="param-desc"><code>movie</code> or <code>tv</code> (defaults to "movie")</span>
+      </div>
+      
+      <div class="param">
+        <span class="param-name">season</span>
+        <span class="param-optional">optional</span>
+        <span class="param-desc">Season number for TV shows</span>
+      </div>
+      
+      <div class="param">
+        <span class="param-name">episode</span>
+        <span class="param-optional">optional</span>
+        <span class="param-desc">Episode number for TV shows</span>
+      </div>
+      
+      <div class="param">
+        <span class="param-name">year</span>
+        <span class="param-optional">optional</span>
+        <span class="param-desc">Release year to filter results</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🔗 Examples</h2>
+      
+      <h3>Search for a movie</h3>
+      <a class="example-link" href="/api/moviesmod?title=Inception">/api/moviesmod?title=Inception</a>
+      
+      <h3>Search with year filter</h3>
+      <a class="example-link" href="/api/moviesmod?title=The%20Dark%20Knight&year=2008">/api/moviesmod?title=The Dark Knight&year=2008</a>
+      
+      <h3>Search for a TV show episode</h3>
+      <a class="example-link" href="/api/moviesmod?title=Breaking%20Bad&type=tv&season=1&episode=1">/api/moviesmod?title=Breaking Bad&type=tv&season=1&episode=1</a>
+    </div>
+
+    <div class="card">
+      <h2>📦 Response Format</h2>
+      <pre><code>{
+  "success": true,
+  "title": "Matched title",
+  "url": "Source page URL",
+  "streams": [
+    {
+      "name": "Stream name",
+      "title": "Full title",
+      "url": "Direct stream URL",
+      "quality": "1080p",
+      "size": "1.5 GB",
+      "headers": { ... },
+      "provider": "moviesmod"
+    }
+  ]
+}</code></pre>
+    </div>
+
+    <div class="footer">
+      <p>Powered by Cloudflare Pages Functions</p>
+    </div>
+  </div>
+</body>
+</html>
