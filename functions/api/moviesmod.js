@@ -150,6 +150,7 @@ function findBestMatch(mainString, targetStrings) {
 // HTML validation thresholds
 const MIN_VALID_HTML_LENGTH = 1000; // Minimum length for a valid search results page
 const MIN_HTML_LENGTH = 100; // Minimum length to consider any response valid
+const NO_RESULTS_INDICATOR = 'No results found'; // Text that indicates no search results
 
 // URL path patterns that indicate movie/show pages
 const CONTENT_PATH_PATTERNS = ['/download/', '/movie/', '/tv/'];
@@ -175,7 +176,7 @@ async function searchMoviesMod(query) {
         html = await response.text();
         
         // Check if we got valid HTML content
-        if (html && html.length > MIN_VALID_HTML_LENGTH && !html.includes('No results found')) {
+        if (html && html.length > MIN_VALID_HTML_LENGTH && !html.includes(NO_RESULTS_INDICATOR)) {
           console.log(`[MoviesMod] Got response from: ${searchUrl} (${html.length} chars)`);
           break;
         }
@@ -231,10 +232,11 @@ async function searchMoviesMod(query) {
       $('main a, #content a, .content a, .container a').each((i, element) => {
         const href = $(element).attr('href');
         const title = $(element).attr('title') || $(element).text().trim();
+        // Skip if href is null/undefined
+        if (!href || !title) return;
         // Filter for links that look like movie/show pages
         const isContentPath = CONTENT_PATH_PATTERNS.some(pattern => href.includes(pattern));
-        if (href && title && 
-            href.includes(baseUrl) && 
+        if (href.includes(baseUrl) && 
             (isContentPath || !href.includes('page')) &&
             title.length > 3 &&
             !results.some(r => r.url === href)) {
