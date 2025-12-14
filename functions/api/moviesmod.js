@@ -147,6 +147,13 @@ function findBestMatch(mainString, targetStrings) {
   };
 }
 
+// HTML validation thresholds
+const MIN_VALID_HTML_LENGTH = 1000; // Minimum length for a valid search results page
+const MIN_HTML_LENGTH = 100; // Minimum length to consider any response valid
+
+// URL path patterns that indicate movie/show pages
+const CONTENT_PATH_PATTERNS = ['/download/', '/movie/', '/tv/'];
+
 // Search for content on MoviesMod
 async function searchMoviesMod(query) {
   try {
@@ -160,7 +167,6 @@ async function searchMoviesMod(query) {
     ];
     
     let html = '';
-    let successUrl = null;
     
     for (const searchUrl of searchUrls) {
       try {
@@ -169,8 +175,7 @@ async function searchMoviesMod(query) {
         html = await response.text();
         
         // Check if we got valid HTML content
-        if (html && html.length > 1000 && !html.includes('No results found')) {
-          successUrl = searchUrl;
+        if (html && html.length > MIN_VALID_HTML_LENGTH && !html.includes('No results found')) {
           console.log(`[MoviesMod] Got response from: ${searchUrl} (${html.length} chars)`);
           break;
         }
@@ -179,7 +184,7 @@ async function searchMoviesMod(query) {
       }
     }
     
-    if (!html || html.length < 100) {
+    if (!html || html.length < MIN_HTML_LENGTH) {
       console.log(`[MoviesMod] No valid HTML response received`);
       return [];
     }
@@ -227,9 +232,10 @@ async function searchMoviesMod(query) {
         const href = $(element).attr('href');
         const title = $(element).attr('title') || $(element).text().trim();
         // Filter for links that look like movie/show pages
+        const isContentPath = CONTENT_PATH_PATTERNS.some(pattern => href.includes(pattern));
         if (href && title && 
             href.includes(baseUrl) && 
-            (href.includes('/download/') || href.includes('/movie/') || href.includes('/tv/') || !href.includes('page')) &&
+            (isContentPath || !href.includes('page')) &&
             title.length > 3 &&
             !results.some(r => r.url === href)) {
           results.push({ title, url: href });
