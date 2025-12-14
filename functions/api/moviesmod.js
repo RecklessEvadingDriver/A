@@ -147,28 +147,106 @@ function findBestMatch(mainString, targetStrings) {
   };
 }
 
+// HTML validation thresholds
+const MIN_VALID_HTML_LENGTH = 1000; // Minimum length for a valid search results page
+const MIN_HTML_LENGTH = 100; // Minimum length to consider any response valid
+const NO_RESULTS_INDICATOR = 'No results found'; // Text that indicates no search results
+const MIN_TITLE_LENGTH = 3; // Minimum title length to consider a valid result
+
+// URL path patterns that indicate movie/show pages
+const CONTENT_PATH_PATTERNS = ['/download/', '/movie/', '/tv/'];
+
 // Search for content on MoviesMod
 async function searchMoviesMod(query) {
   try {
     const baseUrl = await getMoviesModDomain();
-    const searchUrl = `${baseUrl}/search/${encodeURIComponent(query)}`;
-    console.log(`[MoviesMod] Searching: ${searchUrl}`);
     
-    const response = await makeRequest(searchUrl);
-    const html = await response.text();
+    // Try different search URL formats
+    // Some WordPress sites use /search/{query}, others use /?s={query}
+    const searchUrls = [
+      `${baseUrl}/search/${encodeURIComponent(query)}`,
+      `${baseUrl}/?s=${encodeURIComponent(query)}`
+    ];
+    
+    let html = '';
+    
+    for (const searchUrl of searchUrls) {
+      try {
+        console.log(`[MoviesMod] Trying search URL: ${searchUrl}`);
+        const response = await makeRequest(searchUrl);
+        html = await response.text();
+        
+        // Check if we got valid HTML content (case-insensitive check for no results)
+        if (html && html.length > MIN_VALID_HTML_LENGTH && !html.toLowerCase().includes(NO_RESULTS_INDICATOR.toLowerCase())) {
+          console.log(`[MoviesMod] Got response from: ${searchUrl} (${html.length} chars)`);
+          break;
+        }
+      } catch (urlError) {
+        console.log(`[MoviesMod] URL ${searchUrl} failed: ${urlError.message}`);
+      }
+    }
+    
+    if (!html || html.length < MIN_HTML_LENGTH) {
+      console.log(`[MoviesMod] No valid HTML response received`);
+      return [];
+    }
+    
     const $ = cheerio.load(html);
 
     const results = [];
-    $('.latestPost').each((i, element) => {
-      const linkElement = $(element).find('a');
-      const title = linkElement.attr('title');
-      const url = linkElement.attr('href');
-      if (title && url) {
-        results.push({ title, url });
+    
+    // Try multiple selectors in order of likelihood
+    // Different WordPress themes use different class names for posts
+    const selectors = [
+      '.latestPost',
+      '.post-outer',
+      'article.post',
+      '.post',
+      '.entry',
+      '.result-item',
+      '.search-item',
+      '.blog-post'
+    ];
+    
+    let usedSelector = null;
+    for (const selector of selectors) {
+      const elements = $(selector);
+      if (elements.length > 0) {
+        usedSelector = selector;
+        console.log(`[MoviesMod] Using selector: ${selector} (found ${elements.length} elements)`);
+        elements.each((i, element) => {
+          const linkElement = $(element).find('a');
+          const title = linkElement.attr('title') || linkElement.text().trim();
+          const url = linkElement.attr('href');
+          if (title && url && !results.some(r => r.url === url)) {
+            results.push({ title, url });
+          }
+        });
+        break;
       }
-    });
+    }
+    
+    // If no results found with post selectors, try finding links directly in main content
+    if (results.length === 0) {
+      console.log(`[MoviesMod] No results with post selectors, trying direct link extraction...`);
+      // Look for links that might be movie/show links in the main content area
+      $('main a, #content a, .content a, .container a').each((i, element) => {
+        const href = $(element).attr('href');
+        const title = $(element).attr('title') || $(element).text().trim();
+        // Skip if href is null/undefined
+        if (!href || !title) return;
+        // Filter for links that look like movie/show pages
+        const isContentPath = CONTENT_PATH_PATTERNS.some(pattern => href.includes(pattern));
+        if (href.includes(baseUrl) && 
+            (isContentPath || !href.includes('page')) &&
+            title.length > MIN_TITLE_LENGTH &&
+            !results.some(r => r.url === href)) {
+          results.push({ title, url: href });
+        }
+      });
+    }
 
-    console.log(`[MoviesMod] Found ${results.length} search results`);
+    console.log(`[MoviesMod] Found ${results.length} search results${usedSelector ? ` using ${usedSelector}` : ''}`);
     return results;
   } catch (error) {
     console.error(`[MoviesMod] Error searching: ${error.message}`);
