@@ -154,7 +154,7 @@ function findBestMatch(mainString, targetStrings) {
 async function searchMoviesMod(query) {
   try {
     const baseUrl = await getMoviesModDomain();
-    const searchUrl = `${baseUrl}/?s=${encodeURIComponent(query)}`;
+    const searchUrl = `${baseUrl}/search/${encodeURIComponent(query)}`;
     console.log(`[MoviesMod] Searching: ${searchUrl}`);
     
     const response = await makeRequest(searchUrl);
