@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
-  "name": "moviesmod-api",
+  "name": "test",
   "compatibility_date": "2024-12-14",
   "main": "src/index.js",
   "assets": {
