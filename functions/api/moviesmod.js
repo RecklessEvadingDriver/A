@@ -320,8 +320,8 @@ async function resolveIntermediateLink(initialUrl, refererUrl, quality) {
         return [];
       }
 
-      // Use atob for base64 decoding
-      const decodedUrl = atob(encodedUrl);
+      // Use Buffer for base64 decoding (Cloudflare Workers compatible)
+      const decodedUrl = Buffer.from(encodedUrl, 'base64').toString();
       console.log(`[MoviesMod] Decoded modrefer URL: ${decodedUrl}`);
       
       const response = await makeRequest(decodedUrl, {
@@ -659,13 +659,21 @@ async function resolveVideoSeedLink(videoSeedUrl) {
 async function validateVideoUrl(url, timeout = 10000) {
   try {
     console.log(`[MoviesMod] Validating URL: ${url.substring(0, 100)}...`);
+    
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
     const response = await fetch(url, {
       method: 'HEAD',
       headers: {
         'Range': 'bytes=0-1',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
+      },
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
 
     if (response.ok || response.status === 206) {
       console.log(`[MoviesMod] ✓ URL validation successful (${response.status})`);
