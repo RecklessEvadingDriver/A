@@ -151,6 +151,7 @@ function findBestMatch(mainString, targetStrings) {
 const MIN_VALID_HTML_LENGTH = 1000; // Minimum length for a valid search results page
 const MIN_HTML_LENGTH = 100; // Minimum length to consider any response valid
 const NO_RESULTS_INDICATOR = 'No results found'; // Text that indicates no search results
+const MIN_TITLE_LENGTH = 3; // Minimum title length to consider a valid result
 
 // URL path patterns that indicate movie/show pages
 const CONTENT_PATH_PATTERNS = ['/download/', '/movie/', '/tv/'];
@@ -175,8 +176,8 @@ async function searchMoviesMod(query) {
         const response = await makeRequest(searchUrl);
         html = await response.text();
         
-        // Check if we got valid HTML content
-        if (html && html.length > MIN_VALID_HTML_LENGTH && !html.includes(NO_RESULTS_INDICATOR)) {
+        // Check if we got valid HTML content (case-insensitive check for no results)
+        if (html && html.length > MIN_VALID_HTML_LENGTH && !html.toLowerCase().includes(NO_RESULTS_INDICATOR.toLowerCase())) {
           console.log(`[MoviesMod] Got response from: ${searchUrl} (${html.length} chars)`);
           break;
         }
@@ -238,7 +239,7 @@ async function searchMoviesMod(query) {
         const isContentPath = CONTENT_PATH_PATTERNS.some(pattern => href.includes(pattern));
         if (href.includes(baseUrl) && 
             (isContentPath || !href.includes('page')) &&
-            title.length > 3 &&
+            title.length > MIN_TITLE_LENGTH &&
             !results.some(r => r.url === href)) {
           results.push({ title, url: href });
         }
